@@ -22,7 +22,7 @@ NUCLEOTIDES = ["A", "C", "G", "T"]
 
 
 """ Function to validate file format to guarantee that the uploaded file is .fasta extension
-    parameters: 
+    Variables: 
     - file          File .fasta uploaded with the nucleotide sequence
 """
 def validate_FileFormat(file):
@@ -43,7 +43,7 @@ def validate_FileEmpty(file):
         return False
     
 """ Function to validate file content to guarantee that all nucleotides are valid
-    parameters:
+    Variables:
     - file          File .fasta uploaded with the nucleotide sequence
 """
 def validate_Nucleotide_Sequence(file):
@@ -62,7 +62,7 @@ def validate_Nucleotide_Sequence(file):
 
 
 """ Function to invoke Expasy translate tool to protein
-        parameters:
+        Variables:
         - file  .FASTA   File .fasta uploaded with the nucleotide sequence
 """
 def expasy_Translate_Tool(file):
