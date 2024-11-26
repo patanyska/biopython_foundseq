@@ -15,6 +15,7 @@ Details about API here https://www.ebi.ac.uk/seqdb/confluence/pages/viewpage.act
 import requests
 import json
 import time
+import re
 from Bio import SeqRecord, Seq
 
 
@@ -24,7 +25,7 @@ EMBL_EBI_BLAST_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/result/"
 
 """Function to get match for sequence in Blast
 Variables:
-
+    -email        string    Valid email
     -program	  string	BLAST program to use to perform the search.
     -matrix	      string	Scoring matrix to be used in the search.
     -alignments	  int	    Maximum number of alignments displayed in the output.
@@ -45,7 +46,8 @@ Variables:
 
 """
 
-def blast(program,
+def blast(email,
+  program,
   matrix,
   alignments,
   scores,
@@ -63,6 +65,16 @@ def blast(program,
   sequence,
   database):
     
+    if(validate_Empty_Email(email)==False):
+                 raise ValueError(
+            f"The email is mandatory"
+        )
+    
+    if(validate_Email_Format(email)==False):
+                 raise ValueError(
+            f"The email format is not valid"
+        )
+    
     try:
         programs = ["blastn", "blastp", "blastx", "tblastn", "tblastx"]
         matrixes=["BLOSUM45", "BLOSUM50","BLOSUM62", "BLOSUM80", "BLOSUM90", "PAM30", "PAM70", "PAM250"]
@@ -76,6 +88,7 @@ def blast(program,
             sequence=""
 
         files = {
+                    'email': email,
                     'program': 'blastp' if program is None else program,
                     'matrix': 'BLOSUM62' if matrix is None else matrix,
                     'alignments': '50' if alignments is None else alignments,
@@ -141,3 +154,26 @@ def find_Variants(query,subject):
     except:
         raise ValueError(
             f"A problem occurred getting variants from sequence")
+
+"""Function to validate empty email
+Variables: 
+- email        email from user
+"""
+def validate_Empty_Email(email):
+    if(email!=""):
+        return True
+    else:
+        return False
+
+"""Function to validate email format
+Variables: 
+- email        email from user
+"""
+def validate_Email_Format(email):
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    # pass the regular expression
+    # and the string into the fullmatch() method
+    if(re.fullmatch(regex, email)):
+        return True
+    else:
+        return False

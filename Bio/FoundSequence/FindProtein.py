@@ -94,9 +94,9 @@ def read_Json(json_file,variants):
                                 
             d = {'protein_function':protein_function,
                  'catalytic_activity':catalytic_activity,
-                 'disease': disease if disease!="" else messages.LBL_UNIPROT_NO_DISEASE,
-                 'acronym':acronym if acronym!="" else "N/A" ,
-                 'description':disease_description if disease_description!="" else "N/A" }
+                 'disease': disease if disease!="" else "NF",
+                 'acronym':acronym if acronym!="" else "NF" ,
+                 'description':disease_description if disease_description!="" else "NF" }
             struct_diaseases.append(d)
                                     
             return struct_diaseases

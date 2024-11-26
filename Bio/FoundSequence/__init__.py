@@ -24,6 +24,7 @@ This module provides code to work with the several servics as:
 
  Variables:
    -file          bytes     valid .Fasta file
+   -email         string    valid email
    -program	      string	BLAST program to use to perform the search.
     -matrix	      string	Scoring matrix to be used in the search.
     -alignments	  int	    Maximum number of alignments displayed in the output.
@@ -48,10 +49,11 @@ This module provides code to work with the several servics as:
 import TranslateTool
 import BlastTool
 import FindProtein
-
+import DrugBank
 
 
 def foundSequence(file,
+  email,
   program,
   matrix,
   alignments,
@@ -89,7 +91,7 @@ def foundSequence(file,
             dict["expasy"]['protein'] = expasy_result
             dict["expasy"]['bigORF']=big_orf
             
-            blast_result=BlastTool.blast(program,matrix,alignments,scores,exp,dropoff,match_scores,gapopen,gapext,filter,seqrange,gapalign,compstats,align,stype,big_orf,database)
+            blast_result=BlastTool.blast(email,program,matrix,alignments,scores,exp,dropoff,match_scores,gapopen,gapext,filter,seqrange,gapalign,compstats,align,stype,big_orf,database)
             struct_Blast=BlastTool.read_Json(blast_result)
             if(len(struct_Blast)==0):
                 dict["blast"]={}
@@ -123,6 +125,25 @@ def foundSequence(file,
                         dict["uniprot"]["disease"]=struct_Uniprot[0]["disease"]
                         dict["uniprot"]["acronym"]=struct_Uniprot[0]["acronym"]
                         dict["uniprot"]["description"]=struct_Uniprot[0]["description"]
+                        if(struct_Uniprot[0]["disease"]!="NF"):
+                            drugbank_result=DrugBank.found_Drug(struct_Uniprot[0]["disease"])
+                            if(len(drugbank_result)==0):
+                                dict["drugbank"] = {}
+                            else:
+                                dict["drugbank"] = {}
+                                drugs={}
+                                for d in drugbank_result:
+                                    drug = {'name':d[0], 
+                                            'description':d[1],
+                                            'indication':d[2],
+                                            'toxicity':d[3],
+                                            'product_name':d[4],
+                                            'labeller':d[5],
+                                            'dosage_form':d[8],
+                                            'strength':d[9],
+                                            'route':d[10]}
+                                    drugs.append(drug)
+                                dict["drugbank"]=drugs     
         return dict
     except Exception as e:
         return str(e)
