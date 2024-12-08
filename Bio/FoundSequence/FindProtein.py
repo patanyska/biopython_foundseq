@@ -51,56 +51,98 @@ def found_Uniprot_Protein(hit_accession):
         - json_file          json file return from uniprot API
         - variants          variants found in sequence returned from Blastp        
 """
-def read_Json(json_file,variants):
+ 
+def read_Uniprot_Json(self,json_file,variants):
+    struct=[]
     try:
-        breaker=False
-        with open(json_file) as f:
-            data = json.load(f)
-
-        struct_evidences_id=""
+        entryType=""
+        scientificName=""
+        commonName=""
+        taxonId=""
+        lineage=""
+        fullName=""
+        shortName=""
         protein_function=""
         catalytic_activity=""
+        struct_evidences_id=""
         disease=""
         acronym=""
         disease_description=""
-        struct_diaseases=[]
-       
-        for feat in data["features"]:
-            if(feat['type']=="Natural variant" or feat['type']=="Mutagenesis"):
-                for v in variants:
-                    if(feat["location"]["start"]["value"]==int(v['position']) and feat['alternativeSequence']['originalSequence']==v["original"]):
-                        for aseq in feat['alternativeSequence']['alternativeSequences']:
-                            if(aseq==v["variation"]):
-                                struct_evidences_id=feat["evidences"][0]["id"]
-               
 
-            
-        for c in data["comments"]:
+    
+        entryType=json_file["entryType"]
+
+        json_file["features"]
+
+        for f in json_file["features"]:
+            if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
+                for v in variants:
+                    if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
+                        for aseq in f['alternativeSequence']['alternativeSequences']:
+                            if(aseq==v["variation"]):
+                                struct_evidences_id=f["evidences"]["id"]
+
+        scientificName=json_file["organism"]["scientificName"]
+
+        if "commonName" in json_file["organism"].keys():
+            commonName=json_file["organism"]["commonName"]
+        else:
+            commonName="-"
+
+        taxonId=str(json_file["organism"]["taxonId"])
+
+        for l in json_file["organism"]["lineage"]:
+            lineage+=l+"; "
+
+        fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
+
+        if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
+            for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
+                shortName+=sn["value"]+"; "
+        else:
+            shortName="-"
+
+        for c in json_file["comments"]:
             if(c['commentType']=="FUNCTION"):
-                if ("texts" in c): 
-                    protein_function=c["texts"][0]["value"]
-                  
-                if(c['commentType']=="CATALYTIC ACTIVITY"):
-                    if ("reaction" in c): 
-                        catalytic_activity=c["reaction"]["name"]
-                                                
-                if(c['commentType']=="DISEASE"):
-                    if ("disease" in c):
-                        for ev in c['disease']['evidences']:
-                            if(ev['id']==struct_evidences_id):
-                                disease=c['disease']['diseaseId']
-                                acronym=c['disease']['acronym']
-                                disease_description=c['disease']['description']
-                                
-            d = {'protein_function':protein_function,
-                 'catalytic_activity':catalytic_activity,
-                 'disease': disease if disease!="" else "NF",
-                 'acronym':acronym if acronym!="" else "NF" ,
-                 'description':disease_description if disease_description!="" else "NF" }
-            struct_diaseases.append(d)
+                for t in c["texts"]:
+                    protein_function+=t["value"]+"\n"
+            if(c['commentType']=="CATALYTIC ACTIVITY"):
+                catalytic_activity=c["reaction"]["name"]
+
+
+         
+            
+            if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
+                if ("disease" in c):
+                    for ev in c['disease']['evidences']:
+                        if(ev['id']==struct_evidences_id):
+                            disease=c['disease']['diseaseId']
+                            acronym=c['disease']['acronym']
+                            disease_description=c['disease']['description']
+            else:
+                disease="-"
+                acronym="-"
+                disease_description="-"
+                                            
+        prot = {'entry_type':entryType,
+                'scientific_name':scientificName,
+                'common_name':commonName,
+                'taxon_id':taxonId,
+                'lineage':lineage,
+                'full_name':fullName,
+                'short_name':shortName,
+                'protein_function':protein_function,
+                'catalytic_activity':catalytic_activity,
+                'disease':disease,
+                'acronym':acronym,
+                'disease_description':disease_description}
+        struct.append(prot)
+      
+
+     
                                     
-            return struct_diaseases
+        return struct
     except:
-           raise ValueError(
-            f"A problem occurred during reading UniProt json"
+         raise ValueError(f"A problem occurred during reading UniProt json"
         )
+        
