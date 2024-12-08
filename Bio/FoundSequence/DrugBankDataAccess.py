@@ -11,7 +11,7 @@ from pathlib import PurePath
     
 def openConnection():
     mainpath=PurePath(__file__).parent
-    db_path=os.path.join(str(mainpath) + "\\FoundSequence\\db_\\db_drugbank.db")
+    db_path=os.path.join(str(mainpath) + "\\db_\\db_drugbank.db")
     connection=sqlite3.connect(db_path)
     return connection
 

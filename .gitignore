@@ -134,3 +134,10 @@ ENV/
 
 # Testing
 **/.coverage
+Bio/FoundSequence/db_/sql_db_drugbank_script.sql
+Bio/FoundSequence/db_/sql_db_script.sql
+Bio/FoundSequence/db_drugbank
+Bio/FoundSequence/db_b_drugbank.db
+Bio/FoundSequence/db_drugbank.db
+Bio/FoundSequence/db_/db_drugbank.db
+Bio/FoundSequence/db_/db_foundseq.db

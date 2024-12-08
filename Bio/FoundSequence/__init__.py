@@ -49,7 +49,7 @@ This module provides code to work with the several servics as:
 import TranslateTool
 import BlastTool
 import FindProtein
-import DrugBank
+import DrugBankTool
 
 
 def foundSequence(file,
@@ -82,7 +82,7 @@ def foundSequence(file,
             dict["uniprot"] = {}
        else:
         big_orf=TranslateTool.get_BigORF(expasy_result)
-        if(big_orf==0):
+        if(big_orf==""):
             dict["expasy"] = {}
             dict["expasy"]['protein'] = expasy_result
             dict["expasy"]['bigORF']={}
@@ -91,8 +91,13 @@ def foundSequence(file,
             dict["expasy"]['protein'] = expasy_result
             dict["expasy"]['bigORF']=big_orf
             
-            blast_result=BlastTool.blast(email,program,matrix,alignments,scores,exp,dropoff,match_scores,gapopen,gapext,filter,seqrange,gapalign,compstats,align,stype,big_orf,database)
-            struct_Blast=BlastTool.read_Json(blast_result)
+            blast_result=BlastTool.blast(email,program,matrix,
+                                         alignments,scores,exp,
+                                         dropoff,match_scores,
+                                         gapopen,gapext,filter,
+                                         seqrange,gapalign,compstats,
+                                         align,stype,big_orf,database)
+            struct_Blast=read_Blast_Json(blast_result)
             if(len(struct_Blast)==0):
                 dict["blast"]={}
                 dict["blast"]["variants"]={}
@@ -115,7 +120,7 @@ def foundSequence(file,
                 else:
                     dict["blast"]["variants"]=variants
                     uniprot_result=FindProtein.found_Uniprot_Protein(struct_Blast[2])
-                    struct_Uniprot=FindProtein.read_Json(uniprot_result,variants)
+                    struct_Uniprot=read_Uniprot_Json(uniprot_result,variants)
                     if(len(struct_Uniprot)==0):
                         dict["uniprot"] = {}
                     else:
@@ -134,47 +139,169 @@ def foundSequence(file,
                         dict["uniprot"]["description"]=struct_Uniprot[0]["description"]
                        
                         if(struct_Uniprot[0]["disease"]!="-"):
-                            drugbank_result=DrugBank.found_Drug(struct_Uniprot[0]["disease"])
+                            drugbank_result=DrugBankTool.found_Drug(struct_Uniprot[0]["disease"])
                             if(len(drugbank_result)==0):
                                 dict["drugbank"] = {}
                             else:
                                 dict["drugbank"] = {}
                                 drugs={}
                                 for d in drugbank_result:
-                                    drug = {'name':d[0], 
+                                    drug = {'id':d[1],
+                                            'name':d[0],
                                             'description':d[1],
-                                            'indication':d[2],
-                                            'toxicity':d[3],
-                                            'product_name':d[4],
-                                            'labeller':d[5],
-                                            'dosage_form':d[8],
-                                            'strength':d[9],
-                                            'route':d[10]}
+                                            'state':d[5],
+                                            'indication':d[6],
+                                            'product_name':d[9],
+                                            'labeller':d[10],
+                                            'route':d[11],
+                                            'country':d[12]}
                                     drugs.append(drug)
-                                dict["drugbank"]=drugs     
+                                dict["drugbank"]=drugs
         return dict
     except Exception as e:
         return str(e)
 
-def main():
-    my_file="C:\\Users\\PC\\Desktop\\Fastas\\mutseq10.fasta"
-    program='blastp' 
-    matrix='BLOSUM62'
-    alignments='50'
-    scores='5'
-    exp='1e-3'
-    dropoff='0'
-    match_scores='50'
-    gapopen='-1'
-    gapext='-1'
-    filter='F'
-    seqrange= 'START-END'
-    gapalign= 'true'
-    compstats= 'F'
-    align= '0' 
-    stype= 'protein'
-    database='uniprotkb_refprotswissprot'
-    foundSequence(my_file,program,matrix,alignments,scores,exp,dropoff,match_scores,gapopen,gapext,filter,seqrange,gapalign,compstats,align,stype,database)
+def read_Blast_Json(json_file):
+        try:        
+            type=""
+            result=[]
+            if not 'hits' in json_file or len(json_file['hits']) == 0:
+                return result
+            else:
+                
+                struct_hit={}
+                for hit in json_file['hits']:
+                    #in case of protein
+                    if 'hit_uni_os' in hit:
+                        if hit["hit_uni_os"]== "Homo sapiens":
+                            type="protein"
+                            struct_hit=hit 
+                            break 
+                    else:
+                        if hit["hit_db"]== "EM_HUM":
+                            type="nucleotide"
+                            struct_hit=hit 
+                            break 
+                
+                hit_id=struct_hit["hit_id"]    
+                hit_def=struct_hit["hit_def"] 
+                hit_acc=struct_hit["hit_acc"].split("-")[0] #in case of protein is a uniprot id ex:P12345
+                if type=="protein":
+                    hit_uni_de=struct_hit["hit_uni_de"] 
+                    hit_uni_os=struct_hit["hit_uni_os"] 
+                else:
+                    hit_uni_de="NA"
+                    hit_uni_os="NA"
+                hsp_gaps=struct_hit["hit_hsps"][0]["hsp_gaps"]
+                hsp_align_len=struct_hit["hit_hsps"][0]["hsp_align_len"]
+                hsp_qseq=struct_hit["hit_hsps"][0]["hsp_qseq"] #query
+                hsp_hseq=struct_hit["hit_hsps"][0]["hsp_hseq"] #record
+                
+                result.append(hit_id)
+                result.append(hit_def)
+                result.append(hit_acc)
+                result.append(hit_uni_de)
+                result.append(hit_uni_os)
+                result.append(hsp_gaps)
+                result.append(hsp_align_len)
+                result.append(hsp_qseq)
+                result.append(hsp_hseq)
+                
+                return result
+        except Exception as ex:
+            return ex
+        
+def read_Uniprot_Json(json_file,variants):
+    struct=[]
+    try:
+        entryType=""
+        scientificName=""
+        commonName=""
+        taxonId=""
+        lineage=""
+        fullName=""
+        shortName=""
+        protein_function=""
+        catalytic_activity=""
+        struct_evidences_id=""
+        disease=""
+        acronym=""
+        disease_description=""
 
-if __name__ == "__main__":
-         main()
+    
+        entryType=json_file["entryType"]
+
+        json_file["features"]
+
+        for f in json_file["features"]:
+            if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
+                for v in variants:
+                    if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
+                        for aseq in f['alternativeSequence']['alternativeSequences']:
+                            if(aseq==v["variation"]):
+                                struct_evidences_id=f["evidences"]["id"]
+
+        scientificName=json_file["organism"]["scientificName"]
+
+        if "commonName" in json_file["organism"].keys():
+            commonName=json_file["organism"]["commonName"]
+        else:
+            commonName="-"
+
+        taxonId=str(json_file["organism"]["taxonId"])
+
+        for l in json_file["organism"]["lineage"]:
+            lineage+=l+"; "
+
+        fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
+
+        if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
+            for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
+                shortName+=sn["value"]+"; "
+        else:
+            shortName="-"
+
+        for c in json_file["comments"]:
+            if(c['commentType']=="FUNCTION"):
+                for t in c["texts"]:
+                    protein_function+=t["value"]+"\n"
+            if(c['commentType']=="CATALYTIC ACTIVITY"):
+                catalytic_activity=c["reaction"]["name"]
+
+
+         
+            
+            if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
+                if ("disease" in c):
+                    for ev in c['disease']['evidences']:
+                        if(ev['id']==struct_evidences_id):
+                            disease=c['disease']['diseaseId']
+                            acronym=c['disease']['acronym']
+                            disease_description=c['disease']['description']
+            else:
+                disease="-"
+                acronym="-"
+                disease_description="-"
+                                            
+        prot = {'entry_type':entryType,
+                'scientific_name':scientificName,
+                'common_name':commonName,
+                'taxon_id':taxonId,
+                'lineage':lineage,
+                'full_name':fullName,
+                'short_name':shortName,
+                'protein_function':protein_function,
+                'catalytic_activity':catalytic_activity,
+                'disease':disease,
+                'acronym':acronym,
+                'disease_description':disease_description}
+        struct.append(prot)
+      
+
+     
+                                    
+        return struct
+    except:
+         raise ValueError(f"A problem occurred during reading UniProt json"
+        )
+        

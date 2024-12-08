@@ -19,9 +19,9 @@ Variables:
 
 def found_Drug(diseases):
     if(len(diseases)>0):
-        connection=DrugBankDataAccess.openConnectionDrugBank()
+        connection=DrugBankDataAccess.openConnection()
         drugs=DrugBankDataAccess.get_drug_by_indication(connection,diseases)
-        DrugBankDataAccess.closeConnectionDrugBank(connection)
+        DrugBankDataAccess.closeConnection(connection)
         return drugs
     else:
         raise ValueError(

@@ -16,7 +16,8 @@ import requests
 import json
 import time
 import re
-from Bio import SeqRecord, Seq
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 
 EMBL_EBI_CREATE_JOB_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/run"
@@ -144,14 +145,14 @@ def find_Variants(query,subject):
         variants=[]
         if(query!="" and subject!=""):
         
-            qry = SeqRecord(Seq(query), id="query")
-            sbj = SeqRecord(Seq(subject), id="refseq") 
-            for i in range(len(qry.seq)):
-                if qry.seq[i]!=sbj.seq[i]:
-                    m = {'original': sbj.seq[i], 'variation': qry.seq[i],'position':str(i+1)}
+            qryRecord = SeqRecord(Seq(query), id="query")
+            sbjRecord = SeqRecord(Seq(subject), id="refseq") 
+            for i in range(len(qryRecord.seq)):
+                if qryRecord.seq[i]!=sbjRecord.seq[i]:
+                    m = {'original': sbjRecord.seq[i], 'variation': qryRecord.seq[i],'position':str(i+1)}
                     variants.append(m)
         return variants
-    except:
+    except Exception as e:
         raise ValueError(
             f"A problem occurred getting variants from sequence")
 
