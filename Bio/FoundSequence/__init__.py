@@ -120,12 +120,20 @@ def foundSequence(file,
                         dict["uniprot"] = {}
                     else:
                         dict["uniprot"] = {}
+                        dict["uniprot"]["entry_type"]=struct_Uniprot[0]["entry_type"]
+                        dict["uniprot"]["scientific_name"]=struct_Uniprot[0]["scientific_name"]
+                        dict["uniprot"]["common_name"]=struct_Uniprot[0]["common_name"]
+                        dict["uniprot"]["taxon_id"]=struct_Uniprot[0]["taxon_id"]
+                        dict["uniprot"]["lineage"]=struct_Uniprot[0]["lineage"]
+                        dict["uniprot"]["full_name"]=struct_Uniprot[0]["full_name"]
+                        dict["uniprot"]["short_name"]=struct_Uniprot[0]["short_name"]
                         dict["uniprot"]["protein_function"]=struct_Uniprot[0]["protein_function"]
                         dict["uniprot"]["catalytic_activity"]=struct_Uniprot[0]["catalytic_activity"]
                         dict["uniprot"]["disease"]=struct_Uniprot[0]["disease"]
                         dict["uniprot"]["acronym"]=struct_Uniprot[0]["acronym"]
                         dict["uniprot"]["description"]=struct_Uniprot[0]["description"]
-                        if(struct_Uniprot[0]["disease"]!="NF"):
+                       
+                        if(struct_Uniprot[0]["disease"]!="-"):
                             drugbank_result=DrugBank.found_Drug(struct_Uniprot[0]["disease"])
                             if(len(drugbank_result)==0):
                                 dict["drugbank"] = {}
