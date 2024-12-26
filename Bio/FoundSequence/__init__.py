@@ -98,6 +98,7 @@ def foundSequence(file,
                                          seqrange,gapalign,compstats,
                                          align,stype,big_orf,database)
             struct_Blast=read_Blast_Json(blast_result)
+
             if(len(struct_Blast)==0):
                 dict["blast"]={}
                 dict["blast"]["variants"]={}
@@ -136,7 +137,7 @@ def foundSequence(file,
                         dict["uniprot"]["catalytic_activity"]=struct_Uniprot[0]["catalytic_activity"]
                         dict["uniprot"]["disease"]=struct_Uniprot[0]["disease"]
                         dict["uniprot"]["acronym"]=struct_Uniprot[0]["acronym"]
-                        dict["uniprot"]["description"]=struct_Uniprot[0]["description"]
+                        dict["uniprot"]["description"]=struct_Uniprot[0]["disease_description"]
                        
                         if(struct_Uniprot[0]["disease"]!="-"):
                             drugbank_result=DrugBankTool.found_Drug(struct_Uniprot[0]["disease"])
@@ -160,7 +161,7 @@ def foundSequence(file,
         return dict
     except Exception as e:
         return str(e)
-
+    
 def read_Blast_Json(json_file):
         try:        
             type=""
@@ -228,80 +229,122 @@ def read_Uniprot_Json(json_file,variants):
         acronym=""
         disease_description=""
 
-    
-        entryType=json_file["entryType"]
+        if(json_file["entryType"]!="Inactive"):
+            entryType=json_file["entryType"]
 
-        json_file["features"]
+            scientificName=json_file["organism"]["scientificName"]
 
-        for f in json_file["features"]:
-            if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
-                for v in variants:
-                    if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
-                        for aseq in f['alternativeSequence']['alternativeSequences']:
-                            if(aseq==v["variation"]):
-                                struct_evidences_id=f["evidences"]["id"]
-
-        scientificName=json_file["organism"]["scientificName"]
-
-        if "commonName" in json_file["organism"].keys():
-            commonName=json_file["organism"]["commonName"]
-        else:
-            commonName="-"
-
-        taxonId=str(json_file["organism"]["taxonId"])
-
-        for l in json_file["organism"]["lineage"]:
-            lineage+=l+"; "
-
-        fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
-
-        if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
-            for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
-                shortName+=sn["value"]+"; "
-        else:
-            shortName="-"
-
-        for c in json_file["comments"]:
-            if(c['commentType']=="FUNCTION"):
-                for t in c["texts"]:
-                    protein_function+=t["value"]+"\n"
-            if(c['commentType']=="CATALYTIC ACTIVITY"):
-                catalytic_activity=c["reaction"]["name"]
-
-
-         
-            
-            if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
-                if ("disease" in c):
-                    for ev in c['disease']['evidences']:
-                        if(ev['id']==struct_evidences_id):
-                            disease=c['disease']['diseaseId']
-                            acronym=c['disease']['acronym']
-                            disease_description=c['disease']['description']
+            if "commonName" in json_file["organism"].keys():
+                commonName=json_file["organism"]["commonName"]
             else:
-                disease="-"
-                acronym="-"
-                disease_description="-"
-                                            
-        prot = {'entry_type':entryType,
-                'scientific_name':scientificName,
-                'common_name':commonName,
-                'taxon_id':taxonId,
-                'lineage':lineage,
-                'full_name':fullName,
-                'short_name':shortName,
-                'protein_function':protein_function,
-                'catalytic_activity':catalytic_activity,
-                'disease':disease,
-                'acronym':acronym,
-                'disease_description':disease_description}
-        struct.append(prot)
-      
+                commonName="-"
 
-     
-                                    
+            taxonId=str(json_file["organism"]["taxonId"])
+
+            for l in json_file["organism"]["lineage"]:
+                lineage+=l+"; "
+
+            fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
+
+            if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
+                for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
+                    shortName+=sn["value"]+"; "
+            else:
+                shortName="-"
+            
+            json_file["features"]
+            for f in json_file["features"]:
+                if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
+                    for v in variants:
+                        if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
+                            for aseq in f['alternativeSequence']['alternativeSequences']:
+                                if(aseq==v["variation"]):
+                                    if(len(f["evidences"])>1):
+                                        struct_evidences_id=f["evidences"][0]["id"]
+                                    else:
+                                        struct_evidences_id=f["evidences"]["id"]
+
+            
+            for c in json_file["comments"]:
+                if(c['commentType']=="FUNCTION"):
+                    for t in c["texts"]:
+                        protein_function+=t["value"]+"\n"
+                if(c['commentType']=="CATALYTIC ACTIVITY"):
+                    catalytic_activity=c["reaction"]["name"]
+            
+                
+                if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
+                    if ("disease" in c):
+                        for ev in c['disease']['evidences']:
+                            if(ev['id']==struct_evidences_id):
+                                disease=c['disease']['diseaseId']
+                                acronym=c['disease']['acronym']
+                                disease_description=c['disease']['description']
+                else:
+                    disease="-"
+                    acronym="-"
+                    disease_description="-"
+                                                
+            prot = {'entry_type':entryType,
+                    'scientific_name':scientificName,
+                    'common_name':commonName,
+                    'taxon_id':taxonId,
+                    'lineage':lineage,
+                    'full_name':fullName,
+                    'short_name':shortName,
+                    'protein_function':protein_function,
+                    'catalytic_activity':catalytic_activity,
+                    'disease':disease,
+                    'acronym':acronym,
+                    'disease_description':disease_description}
+            struct.append(prot)
+        else:
+                prot = {'entry_type':"Inactive",
+                        'scientific_name':"-",
+                        'common_name':"-",
+                        'taxon_id':"-",
+                        'lineage':"-",
+                        'full_name':"-",
+                        'short_name':"-",
+                        'protein_function':"-",
+                        'catalytic_activity':"-",
+                        'disease':"-",
+                        'acronym':"-",
+                        'disease_description':"-"}
+                struct.append(prot)
+      
         return struct
     except:
          raise ValueError(f"A problem occurred during reading UniProt json"
         )
-        
+
+
+'''Test function code'''
+from pathlib import Path
+root_folder = Path(__file__).parents[2]
+file_path = str(root_folder) +'\\Tests\FoundSequence\\mutseq16.fasta'
+email="test@gmail.com"
+program="blastp"
+search_type="protein"
+database="uniprotkb_refprotswissprot"
+result=foundSequence(file_path,
+              email,
+              program,
+              'BLOSUM62',
+              '50',
+              '5',
+              '1e-3',
+              '0',
+              '50',
+              '-1',
+              '-1',
+              'F',
+              'START-END',
+              'true',
+              'F',
+              '0',
+              search_type,
+              database)
+
+print(result)
+

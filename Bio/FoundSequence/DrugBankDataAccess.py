@@ -22,49 +22,67 @@ def closeConnection(connection):
 """
     Query all approved drugs for indication 
 
-    Variables: - idication: is the patology or problem founded sequence
+    Variables: - indication: is the patology or problem founded sequence
 """
-def get_drug_by_indication(connection,indication):
-   try:
-       strings_indication=[]
-       splited_indication=indication.split()
-       composed_indication=""
-       pos=0
-       for i in splited_indication:
+def get_drug_by_diasease(connection,diasease):
+    try:
+        strings_disease=[]
+        splited_disease=diasease.split()
+        composed_disease=""
+        pos=0
+        for i in splited_disease:
            if(pos==0):
-               strings_indication.append(i)
-               composed_indication=i
+               strings_disease.append(i)
+               composed_disease=i
            else:
-               strings_indication.append(composed_indication+" "+i)
-               composed_indication=composed_indication+" "+i
+               strings_disease.append(composed_disease+" "+i)
+               composed_disease=composed_disease+" "+i
            pos=pos+1
-               
-       indication=""
-       counti=1
-       for s in strings_indication:
-           if(counti==1):
-               indication=indication +"(d.indication like '%"+s+"%' OR "
-           else:
-               if(counti<len(strings_indication)):
-                   indication=indication +"d.indication like '%"+s+"%' OR "
-               else:
-                   indication=indication +"d.indication like '%"+s+"%') COLLATE NOCASE"
-           counti=counti+1
-       
-       pathway=""
-       counti=1
-       for s in strings_indication:
-           if(counti==1):
-               pathway=pathway +"(pt.name like '%"+s+"%' OR "
-           else:
-               if(counti<len(strings_indication)):
-                   pathway=pathway +"pt.name like '%"+s+"%' OR "
-               else:
-                   pathway=pathway +"pt.name like '%"+s+"%') COLLATE NOCASE"
-           counti=counti+1
+
+        
+        if(len(strings_disease)==1):
+           col_description="(d.description like '%"+strings_disease[0]+"%') COLLATE NOCASE"
+           col_indication="(d.indication like '%"+strings_disease[0]+"%') COLLATE NOCASE"
+           col_pathway="(pt.name like '%"+strings_disease[0]+"%') COLLATE NOCASE"
+        else:
+            col_description=""
+            counti=1
+            for s in strings_disease:
+                if(counti==1):
+                    col_description=col_description +"(d.description like '%"+s+"%' OR "
+                else:
+                    if(counti<len(strings_disease)):
+                        col_description=col_description +"d.description like '%"+s+"%' OR "
+                    else:
+                        col_description=col_description +"d.description like '%"+s+"%') COLLATE NOCASE"
+                counti=counti+1
+                    
+            col_indication=""
+            counti=1
+            for s in strings_disease:
+                if(counti==1):
+                    col_indication=col_indication +"(d.indication like '%"+s+"%' OR "
+                else:
+                    if(counti<len(strings_disease)):
+                        col_indication=col_indication +"d.indication like '%"+s+"%' OR "
+                    else:
+                        col_indication=col_indication +"d.indication like '%"+s+"%') COLLATE NOCASE"
+                counti=counti+1
+            
+            col_pathway=""
+            counti=1
+            for s in strings_disease:
+                if(counti==1):
+                    col_pathway=col_pathway +"(pt.name like '%"+s+"%' OR "
+                else:
+                    if(counti<len(strings_disease)):
+                        col_pathway=col_pathway +"pt.name like '%"+s+"%' OR "
+                    else:
+                        col_pathway=col_pathway +"pt.name like '%"+s+"%') COLLATE NOCASE"
+                counti=counti+1
            
-       cursor=connection.cursor()
-       sql="""SELECT distinct(d.name)            
+        cursor=connection.cursor()
+        sql="""SELECT distinct(d.name)            
            ,d.drugbank_id
            ,d.description
            ,d.cas_number
@@ -82,16 +100,16 @@ def get_drug_by_indication(connection,indication):
                LEFT JOIN products p on d.drugbank_id=p.drugbank_id
                LEFT JOIN pathaway pt on d.drugbank_id=pt.drugbank_id   
                    WHERE 
-                       ("""+indication+""" OR """+pathway+""") 
+                       ("""+col_indication+""" OR """+col_pathway+""" OR """+col_description+""") 
                        AND p.approved='true'
                        AND (p.ended_marketing_on IS "" OR p.ended_marketing_on>=date('now'))
                        AND d.drugbank_id NOT IN (select drugbank_id from groups gr where gr.description like "withdrawn")"""
        
        
-       cursor.execute(sql)
-       records = cursor.fetchall()
-       return records
-   except:
+        cursor.execute(sql)
+        records = cursor.fetchall()
+        return records
+    except:
        raise ValueError(
             f"A problem occurred during geting data from DrugBank")
   

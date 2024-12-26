@@ -20,9 +20,9 @@ Variables:
 def found_Drug(diseases):
     if(len(diseases)>0):
         connection=DrugBankDataAccess.openConnection()
-        drugs=DrugBankDataAccess.get_drug_by_indication(connection,diseases)
+        drugs=DrugBankDataAccess.get_drug_by_diasease(connection,diseases)
         DrugBankDataAccess.closeConnection(connection)
         return drugs
     else:
         raise ValueError(
-            f"The disease field is mandatpry to get drugs")
+            f"The disease field is mandatory to get drugs")
