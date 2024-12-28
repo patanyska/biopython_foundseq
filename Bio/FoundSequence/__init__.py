@@ -158,6 +158,8 @@ def foundSequence(file,
                                             'country':d[12]}
                                     drugs.append(drug)
                                 dict["drugbank"]=drugs
+                        else:
+                            dict["drugbank"] = {}
         return dict
     except Exception as e:
         return str(e)
@@ -320,7 +322,7 @@ def read_Uniprot_Json(json_file,variants):
 
 
 '''Test function code'''
-from pathlib import Path
+'''from pathlib import Path
 root_folder = Path(__file__).parents[2]
 file_path = str(root_folder) +'\\Tests\FoundSequence\\mutseq16.fasta'
 email="test@gmail.com"
@@ -346,5 +348,5 @@ result=foundSequence(file_path,
               search_type,
               database)
 
-print(result)
+print(result)'''
 
