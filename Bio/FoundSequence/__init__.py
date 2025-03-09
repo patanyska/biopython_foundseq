@@ -75,7 +75,7 @@ def foundSequence(file,
     raised = False
 
     try:
-       expasy_result=TranslateTool.expasy_Translate_Tool(file)
+       expasy_result=TranslateTool.expasy_Translate_Tool(file,False)
        if(expasy_result==""):
             dict["expasy"] = {}
             dict["blast"]={}
