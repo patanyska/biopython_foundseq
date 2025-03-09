@@ -15,6 +15,10 @@ Variables:
 import os
 import requests
 from Bio import SeqIO #pip install Bio
+from datetime import datetime
+from pathlib import PurePath
+from Bio import SeqIO
+
 
 
 EXPASY_URL="https://web.expasy.org/cgi-bin/translate/dna2aa.cgi"
@@ -65,8 +69,9 @@ def validate_Nucleotide_Sequence(file):
         Variables:
         - file  .FASTA   File .fasta uploaded with the nucleotide sequence
 """
-def expasy_Translate_Tool(file):
-       
+def expasy_Translate_Tool(file,web):
+    
+    if(web==False):   
         if(validate_FileFormat(file)==False):
                 raise ValueError(
             f"The file has a wrong format"
@@ -92,8 +97,35 @@ def expasy_Translate_Tool(file):
         response.raise_for_status()
         output=response.content.decode("utf-8")
         return output
-                       
-                            
+    else:
+        mainpath=PurePath(__file__).parent
+        now=datetime.now()
+        date_time = now.strftime("%d%m%Y_%H%M%S")
+        FASTA_PATH=os.path.join(str(mainpath) + "\\temp_files\\","sequence_fasta"+date_time+".fasta")
+        with open(FASTA_PATH, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        if(validate_FileEmpty(FASTA_PATH)==False):
+                 raise ValueError(
+            f"The file cannot be empty"
+        )
+
+        if(validate_Nucleotide_Sequence(FASTA_PATH)==False):
+                 raise ValueError(
+            f"The file has invalid nucleotides."
+        )
+        sequence = SeqIO.read(FASTA_PATH, "fasta")
+        response = requests.post(
+                            EXPASY_URL,
+                            data={
+                                "dna_sequence": str(sequence.seq),
+                                "output_format": "fasta"
+                            })
+        response.raise_for_status()
+        EXPASY_OUTPUT=response.content.decode("utf-8")
+        return EXPASY_OUTPUT
+                   
                     
         
  
