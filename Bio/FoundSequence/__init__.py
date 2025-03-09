@@ -303,7 +303,8 @@ def read_Uniprot_Json(json_file,variants):
 
 
 '''Test function code'''
-'''from pathlib import Path
+'''
+from pathlib import Path
 root_folder = Path(__file__).parents[2]
 file_path = str(root_folder) +'\\Tests\FoundSequence\\mutseq15.fasta'
 email="test@gmail.com"

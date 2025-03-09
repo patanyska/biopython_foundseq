@@ -24,6 +24,7 @@ EMBL_EBI_CREATE_JOB_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/run
 EMBL_EBI_STATUS_JOB_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/status/"
 EMBL_EBI_BLAST_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/result/"
 
+
 """Function to get match for sequence in Blast
 Variables:
     -email        string    Valid email
