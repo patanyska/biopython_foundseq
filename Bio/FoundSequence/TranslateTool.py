@@ -99,6 +99,11 @@ def expasy_Translate_Tool(file,web):
         return output
     else:
         mainpath=PurePath(__file__).parent
+        folder_path=str(mainpath) + "\\temp_files\\"
+        isExist = os.path.exists(folder_path)
+        if not isExist:
+             os.makedirs(folder_path)
+
         now=datetime.now()
         date_time = now.strftime("%d%m%Y_%H%M%S")
         FASTA_PATH=os.path.join(str(mainpath) + "\\temp_files\\","sequence_fasta"+date_time+".fasta")
