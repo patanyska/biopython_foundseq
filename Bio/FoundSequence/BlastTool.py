@@ -121,9 +121,7 @@ def blast(email,
             job_status=job_status_request.text
 
             if(job_status=="NOT_FOUND" or job_status=="FAILURE" or job_status=="ERROR"):
-                raise ValueError(
-                f"Job had a problem and the status is {job_status}"
-            )
+                raise ValueError(f"Job had a problem and the status is: {job_status}")
                     
             time.sleep(60) #sleep for 60 seconds until Job is finished
 
@@ -132,9 +130,8 @@ def blast(email,
         json_data = json.loads(bytes_data.decode('utf-8'))
                     
         return json_data   
-    except:
-        raise ValueError(
-            f"A problem occurred getting match from Blast")
+    except Exception as e:
+        raise ValueError(f"An error occurred: {str(e)}")
 
 """Function to find variantes in sequence
 Variables: 

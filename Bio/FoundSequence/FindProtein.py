@@ -36,11 +36,12 @@ def found_Uniprot_Protein(hit_accession):
         response = browser.post(
             requestURL,
             headers={'Accept': 'application/json'})
-        response.raise_for_status()
+        
+        if not response.ok:
+            response.raise_for_status()
+
         bytes_data = response.content
         json_data = json.loads(bytes_data.decode('utf-8'))
         return json_data
-    except:
-         raise ValueError(f"A problem occurred finding information about protein in UniProt"
-        )
- 
+    except Exception as e:
+         raise ValueError(f"An error occurred: {str(e)}")
