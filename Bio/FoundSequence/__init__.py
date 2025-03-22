@@ -332,14 +332,14 @@ result=foundSequence(file_path,
 
 print(result)
 
+
+
+
+drugbank_result=DrugBankTool.found_Drug("garfo")'''
+
+
 variants=[]
 m = {'original':'H', 'variation':'R','position':'47'}
 variants.append(m)
-uniprot_result=FindProtein.found_Uniprot_Protein("P00441")
+uniprot_result=FindProtein.found_Uniprot_Protein("P0000")
 struct_Uniprot=read_Uniprot_Json(uniprot_result,variants)
-
-d=[]
-d.append("Amyotrophic lateral sclerosis")
-d.append("Parkinson")
-drugbank_result=DrugBankTool.found_Drug(d)
-print("fim")'''
