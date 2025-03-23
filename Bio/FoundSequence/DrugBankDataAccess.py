@@ -94,7 +94,6 @@ def get_drug_by_diasease(connection,disease):
         FROM drug d 
             INNER JOIN groups g on d.drugbank_id=g.drugbank_id                   
             INNER JOIN products p on d.drugbank_id=p.drugbank_id
-            INNER JOIN pathaway pt on d.drugbank_id=pt.drugbank_id   
                 WHERE 
                     ("""+col_indication+""") 
                     AND p.approved='true'
@@ -134,7 +133,6 @@ def get_drug_by_diasease(connection,disease):
         FROM drug d 
             INNER JOIN groups g on d.drugbank_id=g.drugbank_id                   
             INNER JOIN products p on d.drugbank_id=p.drugbank_id
-            INNER JOIN pathaway pt on d.drugbank_id=pt.drugbank_id   
                 WHERE 
                     ("""+col_description+""") 
                     AND p.approved='true'

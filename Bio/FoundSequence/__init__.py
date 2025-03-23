@@ -69,13 +69,14 @@ def foundSequence(file,
   compstats,
   align,
   stype,
-  database):
+  database,
+  web):
     
     dict={}
     raised = False
 
     try:
-       expasy_result=TranslateTool.expasy_Translate_Tool(file,False)
+       expasy_result=TranslateTool.expasy_Translate_Tool(file,web)
        if(expasy_result==""):
             dict["expasy"] = {}
             dict["blast"]={}
@@ -261,9 +262,11 @@ def read_Uniprot_Json(json_file,variants):
                             for aseq in f['alternativeSequence']['alternativeSequences']:
                                 if(aseq==v["variation"]):
                                     if(len(f["evidences"])>1):
-                                        struct_evidences_id=f["evidences"][0]["id"]
+                                        if('id' in  f['evidences'][0]):
+                                            struct_evidences_id=f["evidences"][0]["id"]
                                     else:
-                                        struct_evidences_id=f["evidences"]["id"]
+                                        if('id' in  f['evidences']):
+                                            struct_evidences_id=f["evidences"]["id"]
 
             
             for c in json_file["comments"]:
