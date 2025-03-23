@@ -98,7 +98,8 @@ def expasy_Translate_Tool(file,web):
         output=response.content.decode("utf-8")
         return output
     else:
-        mainpath=PurePath(__file__).parent
+        
+        mainpath=PurePath(__file__).parent #start creating a dir for temp files
         folder_path=str(mainpath) + "\\temp_files\\"
         isExist = os.path.exists(folder_path)
         if not isExist:
@@ -106,7 +107,7 @@ def expasy_Translate_Tool(file,web):
 
         now=datetime.now()
         date_time = now.strftime("%d%m%Y_%H%M%S")
-        FASTA_PATH=os.path.join(str(mainpath) + "\\temp_files\\","sequence_fasta"+date_time+".fasta")
+        FASTA_PATH=os.path.join(str(mainpath) + "\\temp_files\\","sequence_fasta"+date_time+".fasta")#create temp file
         with open(FASTA_PATH, 'wb+') as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
@@ -129,6 +130,8 @@ def expasy_Translate_Tool(file,web):
                             })
         response.raise_for_status()
         EXPASY_OUTPUT=response.content.decode("utf-8")
+        if os.path.exists(FASTA_PATH):
+            os.remove(FASTA_PATH)
         return EXPASY_OUTPUT
                    
                     
