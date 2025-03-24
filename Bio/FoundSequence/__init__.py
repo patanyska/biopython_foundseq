@@ -141,27 +141,28 @@ def foundSequence(file,
                             dict["drugbank"] = {}
                         else:
                             diseases=[]
+                            dict["drugbank"] = {}
+                            drugs=[]
                             for d in struct_Uniprot[0]["diseases"]:
                                 dict["uniprot"]["disease"]=d["disease"]
                                 dict["uniprot"]["acronym"]=d["acronym"]
                                 dict["uniprot"]["description"]=d["disease_description"]
                                 diseases.append(d["disease"])
                                                
-                            drugbank_result=DrugBankTool.found_Drug(diseases)
-                            dict["drugbank"] = {}
-                            drugs=[]
-                            for drug in drugbank_result:
-                                d= {'id':drug[0][1],
-                                        'name':drug[0][0],
-                                        'description':drug[0][1],
-                                        'state':drug[0][5],
-                                        'indication':drug[0][6],
-                                        'product_name':drug[0][9],
-                                        'labeller':drug[0][10],
-                                        'route':drug[0][11],
-                                        'country':drug[0][12]}
-                                drugs.append(d)
-                            dict["drugbank"]=drugs
+                                drugbank_result=DrugBankTool.found_Drug(d["disease"])
+                            
+                                for drug in drugbank_result:
+                                    d= {'id':drug[0][1],
+                                            'name':drug[0][0],
+                                            'description':drug[0][1],
+                                            'state':drug[0][5],
+                                            'indication':drug[0][6],
+                                            'product_name':drug[0][9],
+                                            'labeller':drug[0][10],
+                                            'route':drug[0][11],
+                                            'country':drug[0][12]}
+                                    drugs.append(d)
+                                dict["drugbank"]=drugs
         return dict
     except Exception as e:
         return str(e)
