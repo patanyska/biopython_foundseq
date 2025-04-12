@@ -50,6 +50,7 @@ import TranslateTool
 import BlastTool
 import FindProtein
 import DrugBankTool
+from typing import List, Dict, Any, Optional
 
 
 def foundSequence(file,
@@ -152,15 +153,13 @@ def foundSequence(file,
                                 drugbank_result=DrugBankTool.found_Drug(d["disease"])
                             
                                 for drug in drugbank_result:
-                                    d= {'id':drug[0][1],
-                                            'name':drug[0][0],
-                                            'description':drug[0][1],
-                                            'state':drug[0][5],
-                                            'indication':drug[0][6],
-                                            'product_name':drug[0][9],
-                                            'labeller':drug[0][10],
-                                            'route':drug[0][11],
-                                            'country':drug[0][12]}
+                                    d= {'id':drug["drugbank_id"],
+                                            'name':drug["name"],
+                                            'description':drug["description"],
+                                            'state':drug["state"],
+                                            'indication':drug["indication"],
+                                            'route':drug["route"],
+                                            'country':drug["country"]}
                                     drugs.append(d)
                                 dict["drugbank"]=drugs
         return dict
@@ -232,77 +231,208 @@ def read_Uniprot_Json(json_file,variants):
         struct_evidences_id="-"
         diseases=[]
 
+        '''if json_file.get("entryType") != "Inactive":
+            
+            # --- Organism ---
+            organism_info = json_file.get("organism", {})
+            scientificName = organism_info.get("scientificName", "-")
+            commonName = organism_info.get("commonName", "-")
+            taxonId = str(organism_info.get("taxonId", "-"))
+            lineage_list = organism_info.get("lineage", [])
+            lineage = "; ".join(lineage_list) if lineage_list else "-"
+
+            # --- Protein Description ---
+            prot_desc = json_file.get("proteinDescription", {})
+            # Using helper for nested structure
+            fullName = _safe_get(prot_desc, ["recommendedName", "fullName", "value"], "-")
+            short_names_list = _safe_get(prot_desc, ["recommendedName", "shortNames"], [])
+            short_name_values = [
+                sn.get("value", "") for sn in short_names_list if isinstance(sn, dict)
+            ]
+            # Use join for short names, filter ensures no empty strings from missing values
+            shortName = "; ".join(filter(None, short_name_values)) if short_name_values else "-"
+
+
+            # --- Comments: Function & Catalytic Activity ---
+            protein_function_parts = []
+            catalytic_activity = "-" # Default value
+            comments = json_file.get("comments", [])
+            for c in comments: # Using 'c' as in original
+                if not isinstance(c, dict): continue
+                commentType = c.get("commentType") # Using 'commentType' as in original
+
+                if commentType == "FUNCTION":
+                    texts = c.get("texts", [])
+                    for t in texts: # Using 't' as in original
+                        if isinstance(t, dict) and "value" in t:
+                            protein_function_parts.append(t["value"])
+
+                elif commentType == "CATALYTIC ACTIVITY":
+                    catalytic_activity = _safe_get(c, ["reaction", "name"], "-")
+
+            # Join collected function descriptions
+            protein_function = "\n".join(protein_function_parts) if protein_function_parts else "-"
+
+            # --- Variant/Evidence/Disease Linking ---
+            # Find the *first* evidence ID from a feature matching any variant
+            struct_evidences_id = None # Using original name
+            features = json_file.get("features", [])
+            variant_found_flag = False # To break outer loops once ID is found
+            for f in features: # Using 'f' as in original
+                if variant_found_flag: break
+                if not isinstance(f, dict): continue
+
+                feature_type = f.get("type")
+                if feature_type in ("Natural variant", "Mutagenesis"):
+                    start_pos = _safe_get(f, ["location", "start", "value"])
+                    original_seq = _safe_get(f, ["alternativeSequence", "originalSequence"])
+                    alt_sequences = _safe_get(f, ["alternativeSequence", "alternativeSequences"], [])
+
+                    if start_pos is None or original_seq is None: continue # Skip incomplete features
+
+                    for v in variants: # Using 'v' as in original
+                        try:
+                            # Check if feature matches the variant 'v'
+                            if (start_pos == int(v.get('position', -999)) and
+                                original_seq == v.get('original') and
+                                v.get('variation') in alt_sequences):
+
+                                # Get the evidence ID from the matched feature
+                                evidences = f.get("evidences", [])
+                                if isinstance(evidences, list) and evidences:
+                                    first_evidence = evidences[0]
+                                    if isinstance(first_evidence, dict):
+                                        struct_evidences_id = first_evidence.get("id") # Assign to original var name
+                                        if struct_evidences_id:
+                                            variant_found_flag = True
+                                            break # Stop checking variants
+                        except (ValueError, TypeError):
+                            continue # Skip variant 'v' if format is wrong
+
+            # Find associated diseases using the single evidence ID found
+            diseases = [] # Using original name
+            if struct_evidences_id: # Check if an ID was found
+                for c in comments: # Loop through comments again
+                    if not isinstance(c, dict): continue
+                    if c.get("commentType") == "DISEASE":
+                        disease_info = c.get("disease")
+                        if isinstance(disease_info, dict):
+                            disease_evidences = disease_info.get("evidences", [])
+                            for ev in disease_evidences: # Using 'ev' as in original
+                                if isinstance(ev, dict) and ev.get("id") == struct_evidences_id:
+                                    # Found a disease linked by the evidence ID
+                                    d = { # Using 'd' as in original
+                                        'disease': disease_info.get('diseaseId', '-'),
+                                        'acronym': disease_info.get('acronym', '-'),
+                                        'disease_description': disease_info.get('description', '-')
+                                    }
+                                    diseases.append(d)
+                                    # break # Optional: Stop after first match in this comment
+
+
+            # 3. Construct the Result Dictionary ('prot')
+            prot = { # Using original name
+                'entry_type': entryType,
+                'scientific_name': scientificName,
+                'common_name': commonName,
+                'taxon_id': taxonId,
+                'lineage': lineage,
+                'full_name': fullName,
+                'short_name': shortName,
+                'protein_function': protein_function,
+                'catalytic_activity': catalytic_activity,
+                'diseases': diseases,
+                # Optional: Include the evidence ID for reference
+                # 'struct_evidences_id': struct_evidences_id if struct_evidences_id else "-"
+            }
+
+            # 4. Append to struct and return (mimicking original return format)
+            struct.append(prot)
+            return struct
+    except:
+         raise ValueError(f"A problem occurred during reading UniProt json"
+        )'''
         if(json_file["entryType"]!="Inactive"):
-            entryType=json_file["entryType"]
+                entryType=json_file["entryType"]
 
-            scientificName=json_file["organism"]["scientificName"]
+                scientificName=json_file["organism"]["scientificName"]
 
-            if "commonName" in json_file["organism"].keys():
-                commonName=json_file["organism"]["commonName"]
-            else:
-                commonName="-"
+                if "commonName" in json_file["organism"].keys():
+                    commonName=json_file["organism"]["commonName"]
+                else:
+                    commonName="-"
 
-            taxonId=str(json_file["organism"]["taxonId"])
+                taxonId=str(json_file["organism"]["taxonId"])
 
-            for l in json_file["organism"]["lineage"]:
-                lineage+=l+"; "
+                for l in json_file["organism"]["lineage"]:
+                    lineage+=l+"; "
 
-            fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
+                fullName=json_file["proteinDescription"]["recommendedName"]["fullName"]["value"]
 
-            if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
-                for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
-                    shortName+=sn["value"]+"; "
-            else:
-                shortName="-"
-            
-            json_file["features"]
-            for f in json_file["features"]:
-                if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
-                    for v in variants:
-                        if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
-                            for aseq in f['alternativeSequence']['alternativeSequences']:
-                                if(aseq==v["variation"]):
-                                    if(len(f["evidences"])>1):
-                                        if('id' in  f['evidences'][0]):
-                                            struct_evidences_id=f["evidences"][0]["id"]
-                                    else:
-                                        if('id' in  f['evidences']):
-                                            struct_evidences_id=f["evidences"]["id"]
-
-            
-            for c in json_file["comments"]:
-                if(c['commentType']=="FUNCTION"):
-                    for t in c["texts"]:
-                        protein_function+=t["value"]+"\n"
-                if(c['commentType']=="CATALYTIC ACTIVITY"):
-                    catalytic_activity=c["reaction"]["name"]
-            
+                if "shortNames" in json_file["proteinDescription"]["recommendedName"]:
+                    for sn in json_file["proteinDescription"]["recommendedName"]["shortNames"]:
+                        shortName+=sn["value"]+"; "
+                else:
+                    shortName="-"
                 
-                if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
-                    if ("disease" in c):
-                        for ev in c['disease']['evidences']:
-                            if(ev['id']==struct_evidences_id):
-                                d={'disease':c['disease']['diseaseId'],
-                                    'acronym':c['disease']['acronym'],
-                                    'disease_description':c['disease']['description']}
-                                diseases.append(d)
-                            
-                                                
-        prot = {'entry_type':entryType,
-                    'scientific_name':scientificName,
-                    'common_name':commonName,
-                    'taxon_id':taxonId,
-                    'lineage':lineage,
-                    'full_name':fullName,
-                    'short_name':shortName,
-                    'protein_function':protein_function,
-                    'catalytic_activity':catalytic_activity,
-                    'diseases':diseases}
+                json_file["features"]
+                for f in json_file["features"]:
+                    if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
+                        for v in variants:
+                            if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
+                                for aseq in f['alternativeSequence']['alternativeSequences']:
+                                    if(aseq==v["variation"]):
+                                        if(len(f["evidences"])>1):
+                                            if('id' in  f['evidences'][0]):
+                                                struct_evidences_id=f["evidences"][0]["id"]
+                                        else:
+                                            if('id' in  f['evidences']):
+                                                struct_evidences_id=f["evidences"]["id"]
+
+                
+                for c in json_file["comments"]:
+                    if(c['commentType']=="FUNCTION"):
+                        for t in c["texts"]:
+                            protein_function+=t["value"]+"\n"
+                    if(c['commentType']=="CATALYTIC ACTIVITY"):
+                        catalytic_activity=c["reaction"]["name"]
+                
+                    
+                    if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
+                        if ("disease" in c):
+                            for ev in c['disease']['evidences']:
+                                if(ev['id']==struct_evidences_id):
+                                    d={'disease':c['disease']['diseaseId'],
+                                        'acronym':c['disease']['acronym'],
+                                        'disease_description':c['disease']['description']}
+                                    diseases.append(d)
+                                
+                                                    
+                prot = {'entry_type':entryType,
+                            'scientific_name':scientificName,
+                            'common_name':commonName,
+                            'taxon_id':taxonId,
+                            'lineage':lineage,
+                            'full_name':fullName,
+                            'short_name':shortName,
+                            'protein_function':protein_function,
+                            'catalytic_activity':catalytic_activity,
+                            'diseases':diseases}
                   
         struct.append(prot)
         return struct
     except:
          raise ValueError(f"A problem occurred during reading UniProt json"
         )
+    
+# Helper function for safe nested dictionary access, returning default if path is broken
+# This was not in the original but is crucial for robustness
+def _safe_get(data: Optional[Dict], keys: List[str], default: Any = None) -> Any:
+    current = data
+    for key in keys:
+        if not isinstance(current, dict): return default
+        current = current.get(key)
+        if current is None: return default
+    return current
 
 
