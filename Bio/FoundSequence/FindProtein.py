@@ -20,12 +20,10 @@ import requests
 import json
 
 
-
 UNIPROT_URL="https://rest.uniprot.org/uniprotkb/"
 
 """ Function to invoke URL from UniProt and get info about a protein
     Variables:
-
     - accession    key to identify a protein page
 """
 def found_Uniprot_Protein(hit_accession):

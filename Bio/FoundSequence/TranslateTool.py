@@ -30,11 +30,10 @@ NUCLEOTIDES = ["A", "C", "G", "T"]
     - file          File .fasta uploaded with the nucleotide sequence
 """
 def validate_FileFormat(file):
-   
-    if (file.endswith(".fasta")):
-        return True
-    else:
+    if not isinstance(file, str):
         return False
+    return file.endswith(".fasta")
+
 """ Function to validate if fasta file is empty
     parameters:
     - file          File .fasta uploaded with the nucleotide sequence
@@ -59,7 +58,7 @@ def validate_Nucleotide_Sequence(file):
             list_line.append(l)
             count=1
             for nuc in list_line:
-                if (nuc.upper() not in NUCLEOTIDES):
+                if nuc.upper() not in NUCLEOTIDES:
                     return False
                 count=count+1
     return True
@@ -71,21 +70,15 @@ def validate_Nucleotide_Sequence(file):
 """
 def expasy_Translate_Tool(file,web):
     
-    if(web==False):   
-        if(validate_FileFormat(file)==False):
-                raise ValueError(
-            f"The file has a wrong format"
-        )
+    if not web:   
+        if not validate_FileFormat(file):
+                raise ValueError(f"The file has a wrong format")
          
-        if(validate_FileEmpty(file)==False):
-                 raise ValueError(
-            f"The file cannot be empty"
-        )
+        if not validate_FileEmpty(file):
+                 raise ValueError(f"The file cannot be empty")
 
-        if(validate_Nucleotide_Sequence(file)==False):
-                 raise ValueError(
-            f"The file has invalid nucleotides."
-        )
+        if not validate_Nucleotide_Sequence(file):
+                 raise ValueError(f"The file has invalid nucleotides.")
         
         
         sequence = SeqIO.read(file, "fasta")
@@ -112,15 +105,11 @@ def expasy_Translate_Tool(file,web):
             for chunk in file.chunks():
                 destination.write(chunk)
 
-        if(validate_FileEmpty(FASTA_PATH)==False):
-                 raise ValueError(
-            f"The file cannot be empty"
-        )
+        if not validate_FileEmpty(FASTA_PATH):
+                 raise ValueError(f"The file cannot be empty")
 
-        if(validate_Nucleotide_Sequence(FASTA_PATH)==False):
-                 raise ValueError(
-            f"The file has invalid nucleotides."
-        )
+        if not validate_Nucleotide_Sequence(FASTA_PATH):
+                 raise ValueError(f"The file has invalid nucleotides.")
         sequence = SeqIO.read(FASTA_PATH, "fasta")
         response = requests.post(
                             EXPASY_URL,
@@ -134,9 +123,6 @@ def expasy_Translate_Tool(file,web):
             os.remove(FASTA_PATH)
         return EXPASY_OUTPUT
                    
-                    
-        
- 
 """ Function to read the protein file generated and save all open reading frames (ORFs) found in the sequence
       - protein  string  protein retrieved by Expasy the previous function
 """
