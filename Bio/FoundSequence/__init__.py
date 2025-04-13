@@ -164,8 +164,12 @@ def foundSequence(file,
                                 dict["drugbank"]=drugs
         return dict
     except Exception as e:
-        return str(e)
-    
+        raise ValueError(f"An unexpected error occurred: {e}")
+
+'''Read json returned to blast API
+ Variables:
+    - json file -file returned to Blast API
+'''    
 def read_Blast_Json(json_file):
         try:        
             type=""
@@ -213,9 +217,13 @@ def read_Blast_Json(json_file):
                 result.append(hsp_hseq)
                 
                 return result
-        except Exception as ex:
-            return ex
-        
+        except Exception as e:
+            raise ValueError(f"An unexpected error occurred reading Blast json: {e}")
+
+'''Read json returned to UniProt API
+ Variables:
+    - json file -file returned to UniProt API
+'''        
 def read_Uniprot_Json(json_file,variants):
     struct=[]
     try:
@@ -231,127 +239,7 @@ def read_Uniprot_Json(json_file,variants):
         struct_evidences_id="-"
         diseases=[]
 
-        '''if json_file.get("entryType") != "Inactive":
-            
-            # --- Organism ---
-            organism_info = json_file.get("organism", {})
-            scientificName = organism_info.get("scientificName", "-")
-            commonName = organism_info.get("commonName", "-")
-            taxonId = str(organism_info.get("taxonId", "-"))
-            lineage_list = organism_info.get("lineage", [])
-            lineage = "; ".join(lineage_list) if lineage_list else "-"
-
-            # --- Protein Description ---
-            prot_desc = json_file.get("proteinDescription", {})
-            # Using helper for nested structure
-            fullName = _safe_get(prot_desc, ["recommendedName", "fullName", "value"], "-")
-            short_names_list = _safe_get(prot_desc, ["recommendedName", "shortNames"], [])
-            short_name_values = [
-                sn.get("value", "") for sn in short_names_list if isinstance(sn, dict)
-            ]
-            # Use join for short names, filter ensures no empty strings from missing values
-            shortName = "; ".join(filter(None, short_name_values)) if short_name_values else "-"
-
-
-            # --- Comments: Function & Catalytic Activity ---
-            protein_function_parts = []
-            catalytic_activity = "-" # Default value
-            comments = json_file.get("comments", [])
-            for c in comments: # Using 'c' as in original
-                if not isinstance(c, dict): continue
-                commentType = c.get("commentType") # Using 'commentType' as in original
-
-                if commentType == "FUNCTION":
-                    texts = c.get("texts", [])
-                    for t in texts: # Using 't' as in original
-                        if isinstance(t, dict) and "value" in t:
-                            protein_function_parts.append(t["value"])
-
-                elif commentType == "CATALYTIC ACTIVITY":
-                    catalytic_activity = _safe_get(c, ["reaction", "name"], "-")
-
-            # Join collected function descriptions
-            protein_function = "\n".join(protein_function_parts) if protein_function_parts else "-"
-
-            # --- Variant/Evidence/Disease Linking ---
-            # Find the *first* evidence ID from a feature matching any variant
-            struct_evidences_id = None # Using original name
-            features = json_file.get("features", [])
-            variant_found_flag = False # To break outer loops once ID is found
-            for f in features: # Using 'f' as in original
-                if variant_found_flag: break
-                if not isinstance(f, dict): continue
-
-                feature_type = f.get("type")
-                if feature_type in ("Natural variant", "Mutagenesis"):
-                    start_pos = _safe_get(f, ["location", "start", "value"])
-                    original_seq = _safe_get(f, ["alternativeSequence", "originalSequence"])
-                    alt_sequences = _safe_get(f, ["alternativeSequence", "alternativeSequences"], [])
-
-                    if start_pos is None or original_seq is None: continue # Skip incomplete features
-
-                    for v in variants: # Using 'v' as in original
-                        try:
-                            # Check if feature matches the variant 'v'
-                            if (start_pos == int(v.get('position', -999)) and
-                                original_seq == v.get('original') and
-                                v.get('variation') in alt_sequences):
-
-                                # Get the evidence ID from the matched feature
-                                evidences = f.get("evidences", [])
-                                if isinstance(evidences, list) and evidences:
-                                    first_evidence = evidences[0]
-                                    if isinstance(first_evidence, dict):
-                                        struct_evidences_id = first_evidence.get("id") # Assign to original var name
-                                        if struct_evidences_id:
-                                            variant_found_flag = True
-                                            break # Stop checking variants
-                        except (ValueError, TypeError):
-                            continue # Skip variant 'v' if format is wrong
-
-            # Find associated diseases using the single evidence ID found
-            diseases = [] # Using original name
-            if struct_evidences_id: # Check if an ID was found
-                for c in comments: # Loop through comments again
-                    if not isinstance(c, dict): continue
-                    if c.get("commentType") == "DISEASE":
-                        disease_info = c.get("disease")
-                        if isinstance(disease_info, dict):
-                            disease_evidences = disease_info.get("evidences", [])
-                            for ev in disease_evidences: # Using 'ev' as in original
-                                if isinstance(ev, dict) and ev.get("id") == struct_evidences_id:
-                                    # Found a disease linked by the evidence ID
-                                    d = { # Using 'd' as in original
-                                        'disease': disease_info.get('diseaseId', '-'),
-                                        'acronym': disease_info.get('acronym', '-'),
-                                        'disease_description': disease_info.get('description', '-')
-                                    }
-                                    diseases.append(d)
-                                    # break # Optional: Stop after first match in this comment
-
-
-            # 3. Construct the Result Dictionary ('prot')
-            prot = { # Using original name
-                'entry_type': entryType,
-                'scientific_name': scientificName,
-                'common_name': commonName,
-                'taxon_id': taxonId,
-                'lineage': lineage,
-                'full_name': fullName,
-                'short_name': shortName,
-                'protein_function': protein_function,
-                'catalytic_activity': catalytic_activity,
-                'diseases': diseases,
-                # Optional: Include the evidence ID for reference
-                # 'struct_evidences_id': struct_evidences_id if struct_evidences_id else "-"
-            }
-
-            # 4. Append to struct and return (mimicking original return format)
-            struct.append(prot)
-            return struct
-    except:
-         raise ValueError(f"A problem occurred during reading UniProt json"
-        )'''
+       
         if(json_file["entryType"]!="Inactive"):
                 entryType=json_file["entryType"]
 
@@ -421,9 +309,9 @@ def read_Uniprot_Json(json_file,variants):
                   
         struct.append(prot)
         return struct
-    except:
-         raise ValueError(f"A problem occurred during reading UniProt json"
-        )
+    except Exception as e:
+        raise ValueError(f"An unexpected error occurred reading UniProt json: {e}")
+        
     
 # Helper function for safe nested dictionary access, returning default if path is broken
 # This was not in the original but is crucial for robustness

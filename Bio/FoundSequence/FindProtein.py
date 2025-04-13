@@ -41,5 +41,9 @@ def found_Uniprot_Protein(hit_accession):
         bytes_data = response.content
         json_data = json.loads(bytes_data.decode('utf-8'))
         return json_data
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Error communicating with the UniProt API: {e}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Error decoding JSON response from the UniProt API: {e}")
     except Exception as e:
-         raise ValueError(f"An error occurred: {str(e)}")
+        raise ValueError(f"An unexpected error occurred: {e}")

@@ -19,10 +19,13 @@ Variables:
 
 def found_Drug(diseases):
     if(len(diseases)>0):
-        connection=DrugBankDataAccess.openConnection()
-        drugs=DrugBankDataAccess.get_drug_by_diasease(connection,diseases)
-        DrugBankDataAccess.closeConnection(connection)
-        return drugs
+        try:
+            connection=DrugBankDataAccess.openConnection()
+            drugs=DrugBankDataAccess.get_drug_by_diasease(connection,diseases)
+            DrugBankDataAccess.closeConnection(connection)
+            return drugs
+        except Exception as e:
+            raise ValueError(f"An unexpected error occurred: {e}")
     else:
         raise ValueError(
             f"The disease field is mandatory to get drugs")

@@ -247,27 +247,4 @@ def blast(email,
         raise ValueError(f"An unexpected error occurred: {e}")
 
 
-    ''' #request to create job 
-        job = requests.post(EMBL_EBI_CREATE_JOB_URL, files=files)
-
-        #wait until job not finish and then get json file with data
-        job_status=""
-        while job_status!="FINISHED":
-            job_status_request=requests.get(EMBL_EBI_STATUS_JOB_URL+job.text)
-            job_status=job_status_request.text
-
-            if(job_status=="NOT_FOUND" or job_status=="FAILURE" or job_status=="ERROR"):
-                raise ValueError(f"Job had a problem and the status is: {job_status}")
-                    
-            time.sleep(60) #sleep for 60 seconds until Job is finished
-
-        response=requests.get(EMBL_EBI_BLAST_URL+job.text+'/json')
-        bytes_data = response.content
-        json_data = json.loads(bytes_data.decode('utf-8'))
-                    
-        return json_data   
-    except Exception as e:
-        raise ValueError(f"An error occurred: {str(e)}")'''
-
-
 

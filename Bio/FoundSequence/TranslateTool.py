@@ -18,6 +18,7 @@ from Bio import SeqIO #pip install Bio
 from datetime import datetime
 from pathlib import PurePath
 from Bio import SeqIO
+import tempfile
 
 
 
@@ -42,27 +43,41 @@ def validate_FileEmpty(file):
     try:
         SeqIO.read(file, "fasta")
         return True
-    except:
+    except Exception as e:
         return False
     
 """ Function to validate file content to guarantee that all nucleotides are valid
     Variables:
     - file          File .fasta uploaded with the nucleotide sequence
 """
-def validate_Nucleotide_Sequence(file):
-    sequence = SeqIO.read(file, "fasta")
-    for line in sequence:
-        trim_line=str.strip(line)
-        list_line=[]
-        for l in trim_line:
-            list_line.append(l)
-            count=1
-            for nuc in list_line:
-                if nuc.upper() not in NUCLEOTIDES:
-                    return False
-                count=count+1
-    return True
+def validate_Nucleotide_Sequence(file,web):
+    if not web:   
+        sequence = SeqIO.read(file, "fasta")
+        for line in sequence:
+            trim_line=str.strip(line)
+            list_line=[]
+            for l in trim_line:
+                list_line.append(l)
+                count=1
+                for nuc in list_line:
+                    if nuc.upper() not in NUCLEOTIDES:
+                        return False
+                    count=count+1
+        return True
+    else:
+        file.seek(0)
+        sequence_record=SeqIO.read(file,"fasta")
+        sequence = sequence_record.seq
+        if not sequence:
+            return False # Sequence content itself is empty
+        
+        seq_upper = str(sequence).upper()
+        for nucleotide in seq_upper:
+            if nucleotide not in NUCLEOTIDES:
+                return False # Invalid nucleotide found
 
+            # If all checks pass
+            return True
 
 """ Function to invoke Expasy translate tool to protein
         Variables:
@@ -75,9 +90,9 @@ def expasy_Translate_Tool(file,web):
                 raise ValueError(f"The file has a wrong format")
          
         if not validate_FileEmpty(file):
-                 raise ValueError(f"The file cannot be empty")
+                 raise ValueError(f"The file cannot be empty (0 bytes).")
 
-        if not validate_Nucleotide_Sequence(file):
+        if not validate_Nucleotide_Sequence(file,web):
                  raise ValueError(f"The file has invalid nucleotides.")
         
         
@@ -91,37 +106,36 @@ def expasy_Translate_Tool(file,web):
         output=response.content.decode("utf-8")
         return output
     else:
-        
-        mainpath=PurePath(__file__).parent #start creating a dir for temp files
-        folder_path=str(mainpath) + "\\temp_files\\"
-        isExist = os.path.exists(folder_path)
-        if not isExist:
-             os.makedirs(folder_path)
-
-        now=datetime.now()
-        date_time = now.strftime("%d%m%Y_%H%M%S")
-        FASTA_PATH=os.path.join(str(mainpath) + "\\temp_files\\","sequence_fasta"+date_time+".fasta")#create temp file
-        with open(FASTA_PATH, 'wb+') as destination:
+        with tempfile.NamedTemporaryFile(mode='w+', delete=True,encoding='utf-8',
+                                     prefix='temp_fasta_', suffix='.fasta') as temp_fasta_file:
+            
             for chunk in file.chunks():
-                destination.write(chunk)
-
-        if not validate_FileEmpty(FASTA_PATH):
-                 raise ValueError(f"The file cannot be empty")
-
-        if not validate_Nucleotide_Sequence(FASTA_PATH):
-                 raise ValueError(f"The file has invalid nucleotides.")
-        sequence = SeqIO.read(FASTA_PATH, "fasta")
-        response = requests.post(
-                            EXPASY_URL,
-                            data={
-                                "dna_sequence": str(sequence.seq),
-                                "output_format": "fasta"
-                            })
-        response.raise_for_status()
-        EXPASY_OUTPUT=response.content.decode("utf-8")
-        if os.path.exists(FASTA_PATH):
-            os.remove(FASTA_PATH)
-        return EXPASY_OUTPUT
+                temp_fasta_file.write(chunk.decode('utf-8'))
+                      
+            temp_fasta_file.flush()
+            if os.fstat(temp_fasta_file.fileno()).st_size == 0:
+                raise ValueError("The file cannot be empty (0 bytes).")
+            
+            if not validate_Nucleotide_Sequence(temp_fasta_file,web):
+                raise ValueError(f"The file has invalid nucleotides.")
+            
+            try:
+                temp_fasta_file.seek(0)
+                sequence_record=SeqIO.read(temp_fasta_file,"fasta")
+                sequence = sequence_record.seq
+                response = requests.post(
+                                    EXPASY_URL,
+                                    data={
+                                        "dna_sequence": str(sequence),
+                                        "output_format": "fasta"
+                                    })
+                response.raise_for_status()
+                EXPASY_OUTPUT=response.content.decode("utf-8")
+                return EXPASY_OUTPUT
+            except requests.exceptions.RequestException as e:
+                raise ValueError(f"Error communicating with the Expasy API: {e}")
+            except Exception as e:
+                raise ValueError(f"An unexpected error occurred: {e}")
                    
 """ Function to read the protein file generated and save all open reading frames (ORFs) found in the sequence
       - protein  string  protein retrieved by Expasy the previous function
