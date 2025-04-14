@@ -8,15 +8,10 @@
 import DrugBankDataAccess
 
 """Code to invoke the DrugBank results.
-
 This module provides code to work with drugs provided by DRUG BANK
 Variables:
-
     - diseaase - disease identification or acronym
-
 """
-
-
 def found_Drug(diseases):
     if(len(diseases)>0):
         try:

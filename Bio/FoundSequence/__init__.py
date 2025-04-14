@@ -4,7 +4,11 @@
 # choice of the "Biopython License Agreement" or the "BSD 3-Clause License".
 # Please see the LICENSE file that should have been included as part of this
 # package.
-
+import TranslateTool
+import BlastTool
+import FindProtein
+import DrugBankTool
+from typing import List, Dict, Any, Optional
 
 """Code to invoke the FoundSequence Tool over the internet.
 
@@ -44,15 +48,6 @@ This module provides code to work with the several servics as:
     -database	  list	    List of database names for search.
 
 """
-
-
-import TranslateTool
-import BlastTool
-import FindProtein
-import DrugBankTool
-from typing import List, Dict, Any, Optional
-
-
 def foundSequence(file,
   email,
   program,
@@ -99,7 +94,7 @@ def foundSequence(file,
                                          gapopen,gapext,filter,
                                          seqrange,gapalign,compstats,
                                          align,stype,big_orf,database)
-            struct_Blast=read_Blast_Json(blast_result)
+            struct_Blast=read_Blast_Json_Protein(blast_result)
 
             if(len(struct_Blast)==0):
                 dict["blast"]={}
@@ -170,7 +165,7 @@ def foundSequence(file,
  Variables:
     - json file -file returned to Blast API
 '''    
-def read_Blast_Json(json_file):
+def read_Blast_Json_Protein(json_file):
         try:        
             type=""
             result=[]
