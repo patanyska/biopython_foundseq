@@ -3,7 +3,6 @@
 # This file is part of my masters degree project
 import os
 import sqlite3
-import datetime
 import xml.etree.ElementTree as et
 from pathlib import PurePath
 

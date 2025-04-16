@@ -309,7 +309,6 @@ def read_Uniprot_Json(json_file,variants):
         
     
 # Helper function for safe nested dictionary access, returning default if path is broken
-# This was not in the original but is crucial for robustness
 def _safe_get(data: Optional[Dict], keys: List[str], default: Any = None) -> Any:
     current = data
     for key in keys:

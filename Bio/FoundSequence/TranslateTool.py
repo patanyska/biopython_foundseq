@@ -15,8 +15,6 @@ Variables:
 import os
 import requests
 from Bio import SeqIO #pip install Bio
-from datetime import datetime
-from pathlib import PurePath
 from Bio import SeqIO
 import tempfile
 
