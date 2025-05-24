@@ -231,7 +231,7 @@ def blast(email,
         else:
             raise TimeoutError(f"BLAST job did not finish within the maximum wait time.")
 
-        job_id=""
+       
         # Get JSON results
         result_url = EMBL_EBI_BLAST_URL + job_id + '/json'
         response = requests.get(result_url)

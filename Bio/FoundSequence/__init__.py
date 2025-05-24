@@ -115,6 +115,7 @@ def foundSequence(file,
                 if(len(variants)==0):
                     dict["blast"]["variants"]={}
                     dict["uniprot"] = {}
+                    dict["drugbank"] = {}
                 else:
                     dict["blast"]["variants"]=variants
                     uniprot_result=FindProtein.found_Uniprot_Protein(struct_Blast[2])
@@ -265,7 +266,7 @@ def read_Uniprot_Json(json_file,variants):
                             if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
                                 for aseq in f['alternativeSequence']['alternativeSequences']:
                                     if(aseq==v["variation"]):
-                                        if(len(f["evidences"])>1):
+                                        if(len(f["evidences"])>1):#ver isto
                                             if('id' in  f['evidences'][0]):
                                                 struct_evidences_id=f["evidences"][0]["id"]
                                         else:
@@ -284,7 +285,7 @@ def read_Uniprot_Json(json_file,variants):
                     if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
                         if ("disease" in c):
                             for ev in c['disease']['evidences']:
-                                if(ev['id']==struct_evidences_id):
+                                if(ev['id']==struct_evidences_id):#ver isto
                                     d={'disease':c['disease']['diseaseId'],
                                         'acronym':c['disease']['acronym'],
                                         'disease_description':c['disease']['description']}
