@@ -134,18 +134,15 @@ def foundSequence(file,
                         dict["uniprot"]["protein_function"]=struct_Uniprot[0]["protein_function"]
                         dict["uniprot"]["catalytic_activity"]=struct_Uniprot[0]["catalytic_activity"]
                         if(len(struct_Uniprot[0]["diseases"])==0):
-                            dict["uniprot"]["disease"]={}
+                            dict["uniprot"]["diseases"]={}
                             dict["drugbank"] = {}
                         else:
-                            diseases=[]
+                            dict["uniprot"]["diseases"]=struct_Uniprot[0]["diseases"]
+                            
                             dict["drugbank"] = {}
                             drugs=[]
                             for d in struct_Uniprot[0]["diseases"]:
-                                dict["uniprot"]["disease"]=d["disease"]
-                                dict["uniprot"]["acronym"]=d["acronym"]
-                                dict["uniprot"]["description"]=d["disease_description"]
-                                diseases.append(d["disease"])
-                                               
+                                                                             
                                 drugbank_result=DrugBankTool.found_Drug(d["disease"])
                             
                                 for drug in drugbank_result:
@@ -240,7 +237,6 @@ def read_Uniprot_Json(json_file,variants):
                 entryType=json_file["entryType"]
 
                 scientificName=json_file["organism"]["scientificName"]
-
                 if "commonName" in json_file["organism"].keys():
                     commonName=json_file["organism"]["commonName"]
                 else:
@@ -259,21 +255,6 @@ def read_Uniprot_Json(json_file,variants):
                 else:
                     shortName="-"
                 
-                json_file["features"]
-                for f in json_file["features"]:
-                    if(f['type']=="Natural variant" or f['type']=="Mutagenesis"):
-                        for v in variants:
-                            if(f["location"]["start"]["value"]==int(v['position']) and f['alternativeSequence']['originalSequence']==v["original"]):
-                                for aseq in f['alternativeSequence']['alternativeSequences']:
-                                    if(aseq==v["variation"]):
-                                        if(len(f["evidences"])>1):#ver isto
-                                            if('id' in  f['evidences'][0]):
-                                                struct_evidences_id=f["evidences"][0]["id"]
-                                        else:
-                                            if('id' in  f['evidences']):
-                                                struct_evidences_id=f["evidences"]["id"]
-
-                
                 for c in json_file["comments"]:
                     if(c['commentType']=="FUNCTION"):
                         for t in c["texts"]:
@@ -281,17 +262,33 @@ def read_Uniprot_Json(json_file,variants):
                     if(c['commentType']=="CATALYTIC ACTIVITY"):
                         catalytic_activity=c["reaction"]["name"]
                 
-                    
-                    if(c['commentType']=="DISEASE" and struct_evidences_id!=""):
+                for c in json_file["comments"]:    
+                    if(c['commentType']=="DISEASE"):
                         if ("disease" in c):
-                            for ev in c['disease']['evidences']:
-                                if(ev['id']==struct_evidences_id):#ver isto
-                                    d={'disease':c['disease']['diseaseId'],
-                                        'acronym':c['disease']['acronym'],
-                                        'disease_description':c['disease']['description']}
-                                    diseases.append(d)
-                                
-                                                    
+
+                            disease_evidences=[]
+                            for evidence in c['disease']['evidences']:
+                                disease_evidences.append(evidence["id"])
+                         
+                
+                            json_file["features"]
+                            for feature in json_file["features"]:
+                                if(feature['type']=="Natural variant" or feature['type']=="Mutagenesis"):
+                                    for variant in variants:
+                                        if(feature["location"]["start"]["value"]==int(variant['position']) and feature['alternativeSequence']['originalSequence']==variant["original"]):
+                                            for alternative in feature['alternativeSequence']['alternativeSequences']:
+                                                if(alternative==variant["variation"]):
+                                                    if("evidences" in feature):
+                                                        for evidence in feature["evidences"]:
+                                                            if "id" in evidence:
+                                                                    if(evidence["id"] in disease_evidences):
+                                                                        d={
+                                                                            'disease':c['disease']['diseaseId'],
+                                                                            'acronym':c['disease']['acronym'],
+                                                                            'disease_description':c['disease']['description']
+                                                                        
+                                                                        }
+                                                                        diseases.append(d)
                 prot = {'entry_type':entryType,
                             'scientific_name':scientificName,
                             'common_name':commonName,
