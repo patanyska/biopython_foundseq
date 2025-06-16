@@ -229,7 +229,6 @@ def read_Uniprot_Json(json_file,variants):
         shortName="-"
         protein_function="-"
         catalytic_activity="-"
-        struct_evidences_id="-"
         diseases=[]
 
        
@@ -288,7 +287,8 @@ def read_Uniprot_Json(json_file,variants):
                                                                             'disease_description':c['disease']['description']
                                                                         
                                                                         }
-                                                                        diseases.append(d)
+                                                                        if d not in diseases:
+                                                                            diseases.append(d)
                 prot = {'entry_type':entryType,
                             'scientific_name':scientificName,
                             'common_name':commonName,
