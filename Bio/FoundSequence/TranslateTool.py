@@ -6,6 +6,7 @@
 
 This module provides code to work with the Expasy Translate Tool
 and return protein sequence formated in frames 5'3' and 3'5', and also detect the big ORF in all sequence
+API Documentation: https://web.expasy.org/translate/programmatic_access.html
 Variables:
 
     -file valid .Fasta file
@@ -15,7 +16,6 @@ Variables:
 import os
 import requests
 from Bio import SeqIO #pip install Bio
-from Bio import SeqIO
 import tempfile
 
 
@@ -47,6 +47,7 @@ def validate_FileEmpty(file):
 """ Function to validate file content to guarantee that all nucleotides are valid
     Variables:
     - file          File .fasta uploaded with the nucleotide sequence
+    - web           true if is called for a web aplication; false if is called from desktop application
 """
 def validate_Nucleotide_Sequence(file,web):
     if not web:   
@@ -80,6 +81,7 @@ def validate_Nucleotide_Sequence(file,web):
 """ Function to invoke Expasy translate tool to protein
         Variables:
         - file  .FASTA   File .fasta uploaded with the nucleotide sequence
+        - web   true if is called for a web aplication; false if is called from desktop application
 """
 def expasy_Translate_Tool(file,web):
     
@@ -105,7 +107,7 @@ def expasy_Translate_Tool(file,web):
         return output
     else:
         with tempfile.NamedTemporaryFile(mode='w+', delete=True,encoding='utf-8',
-                                     prefix='temp_fasta_', suffix='.fasta') as temp_fasta_file:
+             prefix='temp_fasta_', suffix='.fasta') as temp_fasta_file:
             
             for chunk in file.chunks():
                 temp_fasta_file.write(chunk.decode('utf-8'))

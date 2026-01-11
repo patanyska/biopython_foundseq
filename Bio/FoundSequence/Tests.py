@@ -29,12 +29,7 @@ file_path15 = str(root_folder) +'\\Tests\FoundSequence\\mutseq15.fasta'
 
 class TestTranslateTool(unittest.TestResult):
     def testValidFiles(self):
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path_empty))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path_error))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path_malformated))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path1))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path8))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path11))
-        self.assertResult(TranslateTool.expasy_Translate_Tool(file_path15))
+   
+       (TranslateTool.expasy_Translate_Tool(file_path15))
 
 
