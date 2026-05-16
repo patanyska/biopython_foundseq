@@ -247,5 +247,70 @@ def blast(email,
     except Exception as e:
         raise ValueError(f"An unexpected error occurred: {e}")
 
+def submit_blast(email, program, matrix, alignments, scores, exp, dropoff, 
+                 match_scores, gapopen, gapext, filter, seqrange, gapalign, 
+                 compstats, align, stype, sequence, database):
+    
+    if not validate_Empty_Email(email):
+        raise ValueError("The email is mandatory")
+        
+    if not validate_Email_Format(email):
+          raise ValueError("The email format is not valid")
+           
+    
+    programs = ["blastn", "blastp", "blastx", "tblastn", "tblastx"]
+    matrixes = ["BLOSUM45", "BLOSUM50", "BLOSUM62", "BLOSUM80", "BLOSUM90", "PAM30", "PAM70", "PAM250"]
 
+    if program not in programs:
+        program="blastp"
+        
+    if matrix not in matrixes:
+        matrix='BLOSUM62'
+        
+    if len(sequence)==0:
+        sequence=""
+       
+    if not sequence:
+        raise ValueError("Sequence cannot be empty.")
+    
+    if(program=="blastp" and not validate_Protein_Sequence(sequence)):
+         raise ValueError("Sequence with invalid amino-acids")
+    
+    if(program=="blastn" and not validate_Nucleotide_Sequence(sequence)):
+         raise ValueError("Sequence with invalid nucleotides")
+    
+    files = {
+            'email': email,
+            'program': program,
+            'matrix': matrix,
+            'alignments': alignments if alignments is not None else '5',
+            'scores': scores if scores is not None else '5',
+            'exp': exp if exp is not None else '1e-3',
+            'dropoff': dropoff if dropoff is not None else '0',
+            'match-scores': match_scores if match_scores is not None else '50',
+            'gapopen': gapopen if gapopen is not None else '-1',
+            'gapext': gapext if gapext is not None else '-1',
+            'filter': filter if filter is not None else 'F',
+            'seqrange': seqrange if seqrange is not None else 'START-END',
+            'gapalign': gapalign if gapalign is not None else 'true',
+            'compstats': compstats if compstats is not None else 'F',
+            'align': align if align is not None else '0',
+            'stype': stype if stype is not None else 'protein',
+            'sequence': sequence,
+            'database': database if database is not None else 'uniprotkb_refprotswissprot',
+        }
 
+    job = requests.post(EMBL_EBI_CREATE_JOB_URL, data=files) # Use data em vez de files se for formulário
+    job.raise_for_status()
+    return job.text.strip() # Retorna apenas o ID do trabalho
+
+def check_blast_status(job_id):
+    status_url = EMBL_EBI_STATUS_JOB_URL + job_id
+    response = requests.get(status_url)
+    return response.text.strip() # Retorna 'RUNNING', 'FINISHED', etc.
+
+def get_blast_results(job_id):
+    result_url = EMBL_EBI_BLAST_URL + job_id + '/json'
+    response = requests.get(result_url)
+    response.raise_for_status()
+    return response.json()
