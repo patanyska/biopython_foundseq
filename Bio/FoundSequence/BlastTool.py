@@ -23,7 +23,8 @@ EMBL_EBI_STATUS_JOB_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/sta
 EMBL_EBI_BLAST_URL="https://www.ebi.ac.uk/Tools/services/rest/ncbiblast/result/"
 
 AMINO_ACIDS = set(IUPACData.extended_protein_letters)
-NUCLEOTIDES = ["A", "C", "G", "T"]
+NUCLEOTIDES = set(IUPACData.extended_dna_letters)
+
 
 """Function to validate empty email
 Variables: 
@@ -176,10 +177,10 @@ def blast(email,
         raise ValueError("Sequence cannot be empty.")
     
     if(program=="blastp" and not validate_Protein_Sequence(sequence)):
-         raise ValueError("Sequence with invalid amino-acids")
+         raise ValueError("The program selected is 'blastp', but the sequence is composed by nucleotides.")
     
     if(program=="blastn" and not validate_Nucleotide_Sequence(sequence)):
-         raise ValueError("Sequence with invalid nucleotides")
+         raise ValueError("The program selected is 'blastn', but the sequence is composed by aminoacids.")
 
     files = {
             'email': email,
@@ -274,10 +275,11 @@ def submit_blast(email, program, matrix, alignments, scores, exp, dropoff,
         raise ValueError("Sequence cannot be empty.")
     
     if(program=="blastp" and not validate_Protein_Sequence(sequence)):
-         raise ValueError("Sequence with invalid amino-acids")
+         raise ValueError("The program selected is 'blastp', but the sequence is composed by nucleotides.")
     
     if(program=="blastn" and not validate_Nucleotide_Sequence(sequence)):
-         raise ValueError("Sequence with invalid nucleotides")
+         raise ValueError("The program selected is 'blastn', but the sequence is composed by aminoacids.")
+
     
     files = {
             'email': email,
